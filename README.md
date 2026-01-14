@@ -11,26 +11,30 @@ Categories let you save multiple Retool Workflow destinations so you can route c
 
 When you click **Capture + Send**, the extension sends the screenshot to the currently selected category. You can add, edit, delete, and switch categories in the **Manage** section. Recent sends are shown in the history list.
 
+<img width="640" height="400" alt="Screenshot 2026-01-14 162515 (3)" src="https://github.com/user-attachments/assets/208cadd0-4652-4ead-ae28-1cb47ff24959" />
+
 ## How to Find or Generate the Retool Workflow API Key
 Retool Workflows can be called via HTTP using a workflow-specific API key.
 
 1) Open Retool and navigate to **Workflows**.
 2) Open the workflow you want to receive screenshots.
 3) Click **Deploy** (top right) if it is not already deployed.
-4) Go to the workflow’s **Trigger** settings (HTTP trigger).
+4) Go to the workflowâ€™s **Trigger** settings (HTTP trigger).
 5) Copy the **Workflow URL** and the **API key** shown there.
+
+<img width="1280" height="800" alt="Screenshot 2026-01-14 161819 (2)" src="https://github.com/user-attachments/assets/be225ef7-52de-4f77-9bd4-0ab4af737cd7" />
 
 In the extension:
 - Paste the **Workflow URL** into the **Endpoint** field.
 - Paste the **API key** into the **API key** field.
 
-Note: The extension stores these values locally in your browser using Chrome’s storage API.
+Note: The extension stores these values locally in your browser using Chromeâ€™s storage API.
 
 ## Hotkey Functionality
 The default hotkey is **Ctrl+Shift+S**.
 
 - The hotkey triggers a capture using the **Hotkey category** selected in the popup.
-- You can change the hotkey from Chrome’s Extensions shortcut settings:
+- You can change the hotkey from Chromeâ€™s Extensions shortcut settings:
   - Go to `chrome://extensions/shortcuts`
   - Find **Screenshot to Retool Workflow**
   - Set your preferred shortcut
