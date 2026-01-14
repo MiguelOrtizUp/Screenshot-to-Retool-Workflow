@@ -22,4 +22,4 @@ We do not sell, trade, or share your data with third parties. Data is only trans
 You may view or delete your configuration and history at any time through the extension settings. Uninstalling the extension will automatically remove all locally stored data.
 
 6. Contact
-For support or privacy inquiries, please contact: [Insert Your Email Here]
+For support or privacy inquiries, please contact: miguel@buildreallyfast.com
