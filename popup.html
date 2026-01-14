@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Screenshot to Retool Workflow</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <div class="title">Screenshot to Retool Workflow</div>
+      <div class="subtitle">Full-page capture to Retool</div>
+    </header>
+
+    <section class="panel">
+      <label class="label">Category</label>
+      <div class="row">
+        <select id="categorySelect"></select>
+        <button id="toggleManager" class="ghost">Manage</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <label class="label">Hotkey category</label>
+      <select id="hotkeyCategorySelect"></select>
+      <div class="hint">Used when you press Ctrl+Shift+S.</div>
+    </section>
+
+    <section id="manager" class="panel hidden">
+      <div class="manager-header">Categories</div>
+      <input id="categoryName" type="text" placeholder="Category name" />
+      <input id="categoryEndpoint" type="text" placeholder="Retool endpoint URL" />
+      <input id="categoryApiKey" type="text" placeholder="Retool workflow API key" />
+      <div class="row">
+        <button id="saveCategory">Save</button>
+        <button id="cancelEdit" class="ghost">Cancel</button>
+      </div>
+      <div id="categoryList" class="category-list"></div>
+    </section>
+
+    <section class="panel">
+      <label class="label" for="contextInput">Context</label>
+      <textarea id="contextInput" rows="3" placeholder="Why are you capturing this?"></textarea>
+    </section>
+
+    <section class="panel">
+      <button id="captureSend">Capture + Send</button>
+    </section>
+
+    <section class="panel">
+      <div class="manager-header">Recent sends</div>
+      <div id="historyList" class="history-list"></div>
+    </section>
+
+    <section id="status" class="status">Ready.</section>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
+
+
