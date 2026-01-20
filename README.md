@@ -48,5 +48,38 @@ Each capture sends:
 - Timestamp
 - Optional context text entered in the popup
 
+## Example on how to use the data in a workflow: 
+
+Once the extension sends a capture, the data is available in your workflow's startTrigger. If you are using an Email or SMTP block to send the screenshot, follow these steps:
+
+1. Identify the Incoming Data
+The extension sends a JSON payload structured like this:
+
+screenshotBase64: The raw base64 image string.
+url: The URL of the page captured.
+title: The title of the page.
+context: Any text you typed into the extension popup.
+
+2. Configure the Attachment
+In a Retool Email block, click into the Attachment field (use the fx mode) and paste the following code. This snippet converts the raw string into a properly formatted file attachment, using the page title as the filename:
+
+{{
+  [{
+    "base64Data": startTrigger.data.screenshotBase64,
+    "name": (startTrigger.data.title || 'screenshot').replace(/[^a-z0-9]/gi, '_') + ".png",
+    "type": "image/png",
+    "sizeBytes": Math.floor((startTrigger.data.screenshotBase64.length * 3) / 4) - 
+                 (startTrigger.data.screenshotBase64.endsWith('==') ? 2 : 
+                  startTrigger.data.screenshotBase64.endsWith('=') ? 1 : 0)
+  }]
+}}
+
+3. Formatting the Email Body
+You can also use the metadata to provide context in the email body:
+
+New Screenshot Captured
+
+Source: {{ startTrigger.data.url }} Notes: {{ startTrigger.data.context || 'No notes provided.' }}
+
 ## Store Listing Description (Suggested)
 Screenshot to Retool Workflow captures full-page screenshots from your active tab and sends them directly into your Retool Workflows. Configure one or more Categories (each with its own workflow endpoint and API key), select the destination, and send with a single click. Use the hotkey for fast capture to a preset workflow. This extension requests access to all sites so it can capture whichever page you are viewing at the time of capture.
