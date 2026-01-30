@@ -134,38 +134,74 @@ The hotkey only captures the **active tab** at the time you press it.
 
 **Note**: Screenshots are automatically compressed to JPEG format at 85% quality for ~70% file size reduction compared to PNG.
 
-## Example on how to use the data in a workflow: 
+## Example: Using the Data in a Retool Workflow
 
-Once the extension sends a capture, the data is available in your workflow's startTrigger. If you are using an Email or SMTP block to send the screenshot, follow these steps:
+Once the extension sends data, it's available in your workflow's `startTrigger`. Here's how to work with different submission types:
 
-1. Identify the Incoming Data
-The extension sends a JSON payload structured like this:
+### 1. Screenshots and File Uploads
 
-screenshotBase64: The raw base64 image string.
-url: The URL of the page captured.
-title: The title of the page.
-context: Any text you typed into the extension popup.
+For screenshots or file uploads, the data arrives with a nested `file` object:
 
-2. Configure the Attachment
-In a Retool Email block, click into the Attachment field (use the fx mode) and paste the following code. This snippet converts the raw string into a properly formatted file attachment, using the page title as the filename:
+```javascript
+{
+  "categoryId": "uuid",
+  "context": "user text",
+  "url": "page URL",
+  "title": "page title",
+  "capturedAt": "ISO timestamp",
+  "file": {
+    "base64Data": "base64-encoded data",
+    "name": "filename.ext",
+    "type": "mime type",
+    "sizeBytes": 123456
+  }
+}
+```
 
-{{
-  [{
-    "base64Data": startTrigger.data.screenshotBase64,
-    "name": (startTrigger.data.title || 'screenshot').replace(/[^a-z0-9]/gi, '_') + ".png",
-    "type": "image/png",
-    "sizeBytes": Math.floor((startTrigger.data.screenshotBase64.length * 3) / 4) - 
-                 (startTrigger.data.screenshotBase64.endsWith('==') ? 2 : 
-                  startTrigger.data.screenshotBase64.endsWith('=') ? 1 : 0)
-  }]
-}}
+**To use in a Retool Email block attachment:**
 
-3. Formatting the Email Body
-You can also use the metadata to provide context in the email body:
+In the Attachment field (fx mode), the file is already in the correct format:
 
-New Screenshot Captured
+```javascript
+{{ [startTrigger.data.file] }}
+```
 
-Source: {{ startTrigger.data.url }} Notes: {{ startTrigger.data.context || 'No notes provided.' }}
+**Email body example:**
+
+```
+New Submission Received
+
+File: {{ startTrigger.data.file.name }}
+Size: {{ (startTrigger.data.file.sizeBytes / 1024).toFixed(2) }} KB
+Source: {{ startTrigger.data.url || 'Direct upload' }}
+Context: {{ startTrigger.data.context || 'No context provided' }}
+Captured: {{ startTrigger.data.capturedAt }}
+```
+
+### 2. Text-Only Messages
+
+For text-only submissions:
+
+```javascript
+{
+  "categoryId": "uuid",
+  "url": "page URL",
+  "title": "page title",
+  "capturedAt": "ISO timestamp",
+  "message": "user message"
+}
+```
+
+**Email body example:**
+
+```
+New Message Received
+
+From: {{ startTrigger.data.title }}
+URL: {{ startTrigger.data.url }}
+Message: {{ startTrigger.data.message }}
+Sent: {{ startTrigger.data.capturedAt }}
+```
 
 ## Store Listing Description (Suggested)
 Screenshot & File to Retool Workflow captures screenshots or uploads files from your browser and sends them directly into your Retool Workflows. Configure one or more Categories (each with its own workflow endpoint and API key), select the destination, and send with a single click. Supports visible-area or full-page screenshots, file uploads up to 10MB, and text-only messages. Use the hotkey for fast screenshot capture to a preset workflow. This extension requests access to all sites so it can capture whichever page you are viewing at the time of capture.
