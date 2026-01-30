@@ -40,7 +40,7 @@ function buildEndpoint(endpoint, apiKey) {
   return `${endpoint}${separator}workflowApiKey=${encodeURIComponent(apiKey)}`;
 }
 
-async function sendToRetool(payload, options = {}) {
+async function sendToRetool(endpoint, payload, options = {}) {
   const maxAttempts = options.maxAttempts || 3;
   const timeoutMs = options.timeoutMs || 15000;
 
@@ -48,7 +48,7 @@ async function sendToRetool(payload, options = {}) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const response = await fetch(payload.endpoint, {
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -146,7 +146,7 @@ async function captureFullPage(tabId) {
   });
 }
 
-async function runCaptureAndSend({ categoryId, endpoint, apiKey, context }) {
+async function runCaptureAndSend({ categoryId, endpoint, apiKey, context, screenshotMode = "visible-area" }) {
   const tab = await new Promise((resolve, reject) => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (chrome.runtime.lastError) {
@@ -161,7 +161,24 @@ async function runCaptureAndSend({ categoryId, endpoint, apiKey, context }) {
     });
   });
 
-  const screenshotBase64 = await captureFullPage(tab.id);
+  let screenshotBase64;
+  if (screenshotMode === "visible-area") {
+    // Direct visible area capture without stitching
+    screenshotBase64 = await new Promise((resolve, reject) => {
+      chrome.tabs.captureVisibleTab(tab.windowId, { format: "jpeg", quality: 85 }, (dataUri) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+          return;
+        }
+        const base64 = dataUri.split(",")[1];
+        resolve(base64);
+      });
+    });
+  } else {
+    // Full page capture with stitching
+    screenshotBase64 = await captureFullPage(tab.id);
+  }
+
   const capturedAt = new Date().toISOString();
   const body = {
     categoryId,
@@ -169,10 +186,14 @@ async function runCaptureAndSend({ categoryId, endpoint, apiKey, context }) {
     url: tab.url,
     title: tab.title,
     capturedAt,
-    screenshotBase64,
-    endpoint: buildEndpoint(endpoint, apiKey)
+    file: {
+      base64Data: screenshotBase64,
+      name: "screenshot.jpg",
+      type: "image/jpeg",
+      sizeBytes: Math.ceil((screenshotBase64.length * 3) / 4)
+    }
   };
-  const result = await sendToRetool(body, { maxAttempts: 3, timeoutMs: 15000 });
+  const result = await sendToRetool(buildEndpoint(endpoint, apiKey), body, { maxAttempts: 3, timeoutMs: 15000 });
   return { result, meta: { url: tab.url, title: tab.title, capturedAt } };
 }
 
@@ -184,9 +205,125 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       categoryId: message.categoryId,
       endpoint: message.endpoint,
       apiKey: message.apiKey,
-      context: message.context
+      context: message.context,
+      screenshotMode: message.screenshotMode || "visible-area"
     });
   })()
+      .then((payload) => {
+        setBadge("", "#38bdf8");
+        storeHistory({
+          categoryId: message.categoryId,
+          capturedAt: payload.meta.capturedAt,
+          url: payload.meta.url,
+          title: payload.meta.title,
+          status: payload.result.status,
+          ok: payload.result.ok
+        });
+        sendResponse({ ok: true, result: payload.result });
+      })
+      .catch((error) => {
+        setBadge("!", "#ef4444");
+        storeHistory({
+          categoryId: message.categoryId,
+          capturedAt: new Date().toISOString(),
+          url: "",
+          title: "",
+          status: 0,
+          ok: false
+        });
+        sendResponse({ ok: false, error: error.message });
+      });
+    return true;
+  }
+
+  if (message?.type === "FILE_UPLOAD") {
+    (async () => {
+      setBadge("", "#38bdf8");
+      const tab = await new Promise((resolve, reject) => {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+            return;
+          }
+          if (!tabs || !tabs.length) {
+            reject(new Error("No active tab found."));
+            return;
+          }
+          resolve(tabs[0]);
+        });
+      });
+
+      const capturedAt = new Date().toISOString();
+      const body = {
+        categoryId: message.categoryId,
+        context: message.context || "",
+        title: tab.title,
+        capturedAt,
+        file: {
+          base64Data: message.base64Data,
+          name: message.fileName,
+          type: message.fileType,
+          sizeBytes: message.sizeBytes
+        }
+      };
+      const result = await sendToRetool(buildEndpoint(message.endpoint, message.apiKey), body, { maxAttempts: 3, timeoutMs: 15000 });
+      return { result, meta: { url: tab.url, title: tab.title, capturedAt } };
+    })()
+      .then((payload) => {
+        setBadge("", "#38bdf8");
+        storeHistory({
+          categoryId: message.categoryId,
+          capturedAt: payload.meta.capturedAt,
+          url: payload.meta.url,
+          title: payload.meta.title,
+          status: payload.result.status,
+          ok: payload.result.ok
+        });
+        sendResponse({ ok: true, result: payload.result });
+      })
+      .catch((error) => {
+        setBadge("!", "#ef4444");
+        storeHistory({
+          categoryId: message.categoryId,
+          capturedAt: new Date().toISOString(),
+          url: "",
+          title: "",
+          status: 0,
+          ok: false
+        });
+        sendResponse({ ok: false, error: error.message });
+      });
+    return true;
+  }
+
+  if (message?.type === "SEND_MESSAGE") {
+    (async () => {
+      setBadge("", "#38bdf8");
+      const tab = await new Promise((resolve, reject) => {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+            return;
+          }
+          if (!tabs || !tabs.length) {
+            reject(new Error("No active tab found."));
+            return;
+          }
+          resolve(tabs[0]);
+        });
+      });
+
+      const capturedAt = new Date().toISOString();
+      const body = {
+        categoryId: message.categoryId,
+        url: tab.url,
+        title: tab.title,
+        capturedAt,
+        message: message.context || ""
+      };
+      const result = await sendToRetool(buildEndpoint(message.endpoint, message.apiKey), body, { maxAttempts: 3, timeoutMs: 15000 });
+      return { result, meta: { url: tab.url, title: tab.title, capturedAt } };
+    })()
       .then((payload) => {
         setBadge("", "#38bdf8");
         storeHistory({
@@ -229,7 +366,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           setTimeout(resolve, CAPTURE_THROTTLE_MS - (Date.now() - session.lastCaptureAt))
         );
       }
-      const dataUri = await chrome.tabs.captureVisibleTab(windowId, { format: "png" });
+      const dataUri = await chrome.tabs.captureVisibleTab(windowId, { format: "jpeg", quality: 85 });
       session.lastCaptureAt = Date.now();
       const bitmap = await createImageBitmap(dataUriToBlob(dataUri));
 
@@ -310,7 +447,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 
     (async () => {
-      const blob = await session.canvas.convertToBlob({ type: "image/png" });
+      const blob = await session.canvas.convertToBlob({ type: "image/jpeg", quality: 0.85 });
       const buffer = await blob.arrayBuffer();
       return arrayBufferToBase64(buffer);
     })()

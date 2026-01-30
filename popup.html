@@ -12,7 +12,7 @@
       <div class="subtitle">Full-page capture to Retool</div>
     </header>
 
-    <section class="panel">
+    <section class="panel" id="categoryPanel">
       <label class="label">Category</label>
       <div class="row">
         <select id="categorySelect"></select>
@@ -20,7 +20,7 @@
       </div>
     </section>
 
-    <section class="panel">
+    <section class="panel" id="hotkeyCategoryPanel">
       <label class="label">Hotkey category</label>
       <select id="hotkeyCategorySelect"></select>
       <div class="hint">Used when you press Ctrl+Shift+S.</div>
@@ -31,6 +31,10 @@
       <input id="categoryName" type="text" placeholder="Category name" />
       <input id="categoryEndpoint" type="text" placeholder="Retool endpoint URL" />
       <input id="categoryApiKey" type="text" placeholder="Retool workflow API key" />
+      <label class="checkbox-label">
+        <input id="categoryTextOnly" type="checkbox" />
+        <span>Text only (message without attachment)</span>
+      </label>
       <div class="row">
         <button id="saveCategory">Save</button>
         <button id="cancelEdit" class="ghost">Cancel</button>
@@ -38,21 +42,43 @@
       <div id="categoryList" class="category-list"></div>
     </section>
 
-    <section class="panel">
-      <label class="label" for="contextInput">Context</label>
-      <textarea id="contextInput" rows="3" placeholder="Why are you capturing this?"></textarea>
+    <section class="panel" id="contextPanel">
+      <label class="label" for="contextInput">Context / Message</label>
+      <textarea id="contextInput" rows="3" placeholder="Why are you capturing this? Or your message..."></textarea>
     </section>
 
-    <section class="panel">
-      <button id="captureSend">Capture + Send</button>
+    <section class="panel" id="actionPanel">
+      <div id="screenshotModeContainer">
+        <label class="label">Screenshot Mode</label>
+        <div class="switch-container">
+          <span class="switch-label">Visible area</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="screenshotModeToggle" />
+            <span class="slider"></span>
+          </label>
+          <span class="switch-label">Full page</span>
+        </div>
+      </div>
+      <div class="action-buttons">
+        <button id="captureButton" class="action-button">Capture</button>
+        <button id="uploadButton" class="action-button">Upload File</button>
+      </div>
+      <div id="selectedFileLine" class="file-line" style="display: none;">
+        <span id="fileNameText"></span>
+        <button id="clearFileButton" class="clear-file-btn" title="Clear selected file">×</button>
+      </div>
+      <input id="fileInput" type="file" style="display: none;" accept=".jpg,.jpeg,.png,.gif,.webp,.svg,.pdf,.txt,.csv,.docx,.xlsx,.zip" />
+      <button id="sendMessageButton" class="action-button full-width" style="display: none; margin-top: 10px;">Send Message</button>
+      <div id="status" class="status">Ready.</div>
     </section>
 
-    <section class="panel">
-      <div class="manager-header">Recent sends</div>
-      <div id="historyList" class="history-list"></div>
+    <section class="panel" id="historyPanel">
+      <div class="row">
+        <div class="manager-header" style="flex: 1;">Recent sends</div>
+        <button id="toggleHistory" class="ghost">Show</button>
+      </div>
+      <div id="historyList" class="history-list hidden"></div>
     </section>
-
-    <section id="status" class="status">Ready.</section>
 
     <script src="popup.js"></script>
   </body>
