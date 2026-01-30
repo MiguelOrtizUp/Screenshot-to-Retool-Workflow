@@ -32,7 +32,7 @@ Categories let you save multiple Retool Workflow destinations so you can route c
 - Send messages without any file or screenshot attachment
 - Useful for status updates, notes, or text-based workflows
 
-<img width="640" height="400" alt="Screenshot 2026-01-14 162515 (3)" src="https://github.com/user-attachments/assets/208cadd0-4652-4ead-ae28-1cb47ff24959" />
+<img width="1188" height="640" alt="image" src="https://github.com/user-attachments/assets/c54a886f-e3d8-4620-88c3-f5bb852f923e" />
 
 ## How to Use
 
