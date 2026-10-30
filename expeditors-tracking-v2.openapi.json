@@ -1,0 +1,121 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Expeditors Tracking API v2 (ProductIQ subset)",
+    "version": "2.0.0",
+    "description": "Minimal GET-only subset used by ProductIQ to load ff01-ff05. OM endpoints intentionally excluded."
+  },
+  "servers": [{ "url": "https://api.expeditors.com/tracking/v2" }],
+  "components": {
+    "parameters": {
+      "sizeLimit": { "name": "sizeLimit", "in": "query", "required": false, "schema": { "type": "integer", "minimum": 1, "maximum": 500 }, "description": "Page size" },
+      "offset": { "name": "offset", "in": "query", "required": false, "schema": { "type": "integer", "minimum": 0 }, "description": "Page offset" },
+      "start": { "name": "start", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Updated-since window start, e.g. 2026-10-29T06:00:00" },
+      "end": { "name": "end", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Updated-since window end, e.g. 2026-10-30T06:00:00" },
+      "shipmentId": { "name": "shipmentId", "in": "path", "required": true, "schema": { "type": "string" }, "description": "EXP shipment id (Housebill), e.g. 6621208796" },
+      "containerIdentifier": { "name": "containerIdentifier", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Container number or instance, e.g. CSNU6558664" }
+    },
+    "schemas": {
+      "AnyObject": { "type": "object", "additionalProperties": true },
+      "AnyObjectList": { "type": "array", "items": { "$ref": "#/components/schemas/AnyObject" } },
+      "ObjectOrList": { "oneOf": [ { "$ref": "#/components/schemas/AnyObject" }, { "$ref": "#/components/schemas/AnyObjectList" } ] }
+    },
+    "responses": {
+      "List": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnyObjectList" } } } },
+      "Single": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ObjectOrList" } } } },
+      "Error": { "description": "Error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnyObject" } } } }
+    }
+  },
+  "paths": {
+    "/shipments": {
+      "get": {
+        "operationId": "listShipments",
+        "summary": "List shipments (summary)",
+        "parameters": [
+          { "$ref": "#/components/parameters/sizeLimit" },
+          { "$ref": "#/components/parameters/offset" },
+          { "$ref": "#/components/parameters/start" },
+          { "$ref": "#/components/parameters/end" }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/List" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/shipments/{shipmentId}": {
+      "get": {
+        "operationId": "getShipment",
+        "summary": "Shipment detail",
+        "parameters": [ { "$ref": "#/components/parameters/shipmentId" } ],
+        "responses": { "200": { "$ref": "#/components/responses/Single" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/shipments/{shipmentId}/references": {
+      "get": {
+        "operationId": "getShipmentReferences",
+        "summary": "Shipment references (PO, booking, container, etc.)",
+        "parameters": [
+          { "$ref": "#/components/parameters/shipmentId" },
+          { "$ref": "#/components/parameters/sizeLimit" },
+          { "$ref": "#/components/parameters/offset" }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/List" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/shipments/{shipmentId}/events": {
+      "get": {
+        "operationId": "getShipmentEvents",
+        "summary": "Shipment events",
+        "parameters": [
+          { "$ref": "#/components/parameters/shipmentId" },
+          { "$ref": "#/components/parameters/sizeLimit" },
+          { "$ref": "#/components/parameters/offset" }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/List" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/containers": {
+      "get": {
+        "operationId": "listContainers",
+        "summary": "List container instances (summary)",
+        "parameters": [
+          { "$ref": "#/components/parameters/sizeLimit" },
+          { "$ref": "#/components/parameters/offset" },
+          { "$ref": "#/components/parameters/start" },
+          { "$ref": "#/components/parameters/end" }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/List" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/containers/{containerIdentifier}": {
+      "get": {
+        "operationId": "getContainer",
+        "summary": "Container detail",
+        "parameters": [ { "$ref": "#/components/parameters/containerIdentifier" } ],
+        "responses": { "200": { "$ref": "#/components/responses/Single" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/containers/{containerIdentifier}/lines": {
+      "get": {
+        "operationId": "getContainerLines",
+        "summary": "Container lines",
+        "parameters": [
+          { "$ref": "#/components/parameters/containerIdentifier" },
+          { "$ref": "#/components/parameters/sizeLimit" },
+          { "$ref": "#/components/parameters/offset" }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/List" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/containers/{containerIdentifier}/events": {
+      "get": {
+        "operationId": "getContainerEvents",
+        "summary": "Container events",
+        "parameters": [
+          { "$ref": "#/components/parameters/containerIdentifier" },
+          { "$ref": "#/components/parameters/sizeLimit" },
+          { "$ref": "#/components/parameters/offset" }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/List" }, "default": { "$ref": "#/components/responses/Error" } }
+      }
+    }
+  }
+}
